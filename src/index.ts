@@ -5,8 +5,13 @@ import type {
 } from '@module-federation/runtime/types';
 
 import { loadScript, isBrowserEnv } from '@module-federation/sdk';
+import { PluginOpitons } from './PluginOptions';
 
-export function RetryImportPlugin(): FederationRuntimePlugin {
+export function RetryImportPlugin(
+  options: PluginOpitons = {
+    retry: (failedAttempts) => (failedAttempts < 4 ? 200 : null),
+  },
+): FederationRuntimePlugin {
   return {
     name: 'retry-import-plugin',
     async loadEntry({ remoteInfo, remoteEntryExports }) {
@@ -18,7 +23,7 @@ export function RetryImportPlugin(): FederationRuntimePlugin {
         throw new Error('Node is not supported by this plugin');
       }
 
-      return loadWithRetry(remoteInfo, remoteEntryExports);
+      return loadWithRetry(remoteInfo, remoteEntryExports, options);
     },
   };
 }
@@ -26,15 +31,16 @@ export function RetryImportPlugin(): FederationRuntimePlugin {
 async function loadWithRetry(
   remoteInfo: RemoteInfo,
   remoteEntryExports: RemoteEntryExports | undefined,
+  options: PluginOpitons,
 ) {
   const { entry, entryGlobalName, name, type } = remoteInfo;
 
-  let module;
-  let attempt = 0;
+  let module: RemoteEntryExports | null = null;
+  let failedAttempts = 0;
 
   let entryUrl = entry;
 
-  while (attempt < 3) {
+  while (module == null) {
     try {
       module = await load(
         entryUrl,
@@ -44,18 +50,20 @@ async function loadWithRetry(
         remoteEntryExports,
       );
     } catch (e) {
-      if (attempt < 3) {
-        await new Promise((resolve) => setTimeout(resolve, 200));
-        entryUrl += '#'; // Change the URL. Otherwise, browser won't retry the import
-      } else {
+      failedAttempts++;
+
+      const retryIn = options.retry(failedAttempts);
+
+      if (retryIn == null) {
         throw e;
       }
-    }
 
-    attempt++;
+      await new Promise((resolve) => setTimeout(resolve, retryIn));
+      entryUrl += '#'; // Change the URL. Otherwise, browser won't retry the import
+    }
   }
 
-  return module as RemoteEntryExports;
+  return module;
 }
 
 function load(
