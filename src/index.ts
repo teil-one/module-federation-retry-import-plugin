@@ -95,7 +95,7 @@ async function loadEsmEntry({
     return remoteEntryExports;
   }
 
-  return await import(entry);
+  return await import(/* webpackIgnore: true */ /* @vite-ignore */ entry);
 }
 
 async function loadSystemJsEntry({
