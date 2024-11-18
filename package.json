@@ -1,6 +1,6 @@
 {
   "name": "@teil-one/module-federation-retry-import-plugin",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A runtime Module Federation 2 plugin for retrying remote module imports. Works in browser only.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
