@@ -13,7 +13,16 @@ export default defineConfig({
           root: 'dist',
         },
         target: 'web',
-        minify: true,
+        minify: {
+          jsOptions: {
+            minimizerOptions: {
+              minify: true,
+              format: {
+                comments: 'all',
+              },
+            },
+          },
+        },
         sourceMap: {
           js: 'cheap-module-source-map',
         },
@@ -30,7 +39,16 @@ export default defineConfig({
           root: 'dist',
         },
         target: 'web',
-        minify: true,
+        minify: {
+          jsOptions: {
+            minimizerOptions: {
+              minify: true,
+              format: {
+                comments: 'all',
+              },
+            },
+          },
+        },
         sourceMap: {
           js: 'cheap-module-source-map',
         },
